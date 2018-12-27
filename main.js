@@ -1,22 +1,6 @@
-// ---------------
-// Load Dictionary
-// ---------------
-
-let dictionary;
-
-$.getJSON("./words.json", function(json) {
-    dictionary = json;
-
-    let sorted = {};
-
-    dictionary.forEach((word) => {
-    	sorted[word.length] = sorted[word.length] || [];
-    	sorted[word.length].push(word);
-    });
-
-    dictionary = sorted;
-});
-
+// ---------------------
+// Add Prototype Helpers
+// ---------------------
 
 Array.prototype.intersection = function(arr2, sameOrder = true) {
 	let arr1 = this;
@@ -26,12 +10,6 @@ Array.prototype.intersection = function(arr2, sameOrder = true) {
 	} else{
 		return arr1.filter((value, i) => arr2[i] === value);
 	}
-}
-
-Array.prototype.removeDuplicates = function() {
-	return this.filter((item, pos) => {
-	    return this.indexOf(item) == pos;
-	});
 }
 
 String.prototype.matchcase = function (string) {
@@ -53,8 +31,9 @@ String.prototype.matchcase = function (string) {
 // ---------------
 // Find Match
 // ---------------
+let dictionary;
 
-let compare = (word, reference) => {
+let jaccard = (word, reference) => {
 	let letters = word.split('');
 
 	let intersection = 0;
@@ -67,22 +46,8 @@ let compare = (word, reference) => {
 
 	let union = reference.length + word.length - intersection;
 
-	return {
-		// https://en.wikipedia.org/wiki/Jaccard_index
-		jaccard: (intersection/union)
-	};
-}
-
-
-let bestMatchByType = (matches, type, reverse) => {
-	let words = Object.keys(matches);
-	let bestMatch = words[0];
-
-	words = words.sort((a, b) => {
-		return matches[a][type] > matches[b][type] ? 1 : -1;
-	});
-	if(reverse) words = words.reverse();
-	return words.slice(0, 15);
+	// https://en.wikipedia.org/wiki/Jaccard_index
+	return intersection/union;
 }
 
 
@@ -95,15 +60,25 @@ let checkDictionary = (word) => {
 	}, []);
 
 	searchDomain.forEach((reference) => {
-		results[reference] = compare(word, reference);
+		results[reference] = jaccard(word, reference);
 	});
+
+	let words = Object.keys(results).sort((a, b) => {
+		return results[a] > results[b] ? -1 : 1;
+	}).slice(0, 15);
+
 	return {
-		jaccard: bestMatchByType(results, 'jaccard', true),
+		jaccard: words,
 		inDictionary: searchDomain.indexOf(word) !== -1
 	};
 }
 
 
+
+
+// ---------------------
+// Visual Helpers
+// ---------------------
 
 let textWidth = function(text){
 	$input = $(`<p class="simulate-input">${text}</p>`);
@@ -112,6 +87,25 @@ let textWidth = function(text){
  	return width;
 };
 
+
+
+
+// ---------------------
+// Start Autocomplete
+// ---------------------
+
+$.getJSON("./an-array-of-english-words/words.json", function(json) {
+    dictionary = json;
+
+    let sorted = {};
+
+    dictionary.forEach((word) => {
+    	sorted[word.length] = sorted[word.length] || [];
+    	sorted[word.length].push(word);
+    });
+
+    dictionary = sorted;
+});
 
 $(document).ready(() => {
 

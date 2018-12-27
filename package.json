@@ -4,7 +4,8 @@
   "description": "",
   "main": "main.js",
   "scripts": {
-    "start": "./node_modules/.bin/ws --spa index.html"
+    "start": "./node_modules/.bin/ws --spa index.html",
+    "confetti": "node ./node_modules/cli-confetti/bin/cli-confetti"
   },
   "repository": {
     "type": "git",
@@ -17,6 +18,7 @@
   },
   "homepage": "https://github.com/christianjuth/autocorrect#readme",
   "devDependencies": {
-    "local-web-server": "^2.6.0"
+    "local-web-server": "^2.6.0",
+    "cli-confetti": "^1.0.7"
   }
 }
