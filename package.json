@@ -1,0 +1,22 @@
+{
+  "name": "autocorrect",
+  "version": "1.0.0",
+  "description": "",
+  "main": "main.js",
+  "scripts": {
+    "start": "./node_modules/.bin/ws --spa index.html"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/christianjuth/autocorrect.git"
+  },
+  "author": "Christian Juth",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/christianjuth/autocorrect/issues"
+  },
+  "homepage": "https://github.com/christianjuth/autocorrect#readme",
+  "devDependencies": {
+    "local-web-server": "^2.6.0"
+  }
+}

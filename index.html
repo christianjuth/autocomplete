@@ -1,0 +1,91 @@
+<html>
+	<head>
+		<script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.3.1/jquery.min.js"></script>
+		<script type="text/javascript" src="./main.js"></script>
+		<link href="https://fonts.googleapis.com/css?family=Open+Sans:300|Titillium+Web:700" rel="stylesheet">
+		<style type="text/css">
+
+			body{
+				background: #000428;  /* fallback for old browsers */
+				background: -webkit-linear-gradient(to right, #004e92, #000428);  /* Chrome 10-25, Safari 5.1-6 */
+				background: linear-gradient(to right, #004e92, #000428); /* W3C, IE 10+/ Edge, Firefox 16+, Chrome 26+, Opera 12+, Safari 7+ */
+				overflow: hidden;
+			}
+
+			p, input{
+				/*text-align: center;*/
+				margin: 4px 0;
+				color: #fff;
+			}
+
+			.simulate-input,
+			input{
+				font-size: 50px;
+				font-family: 'Titillium Web', sans-serif;
+			}
+
+			.simulate-input{
+			    width: auto;
+    			display: inline-block;
+    			opacity: 0;
+			}
+
+			input{
+				width: 100%;
+				background: transparent;
+				height: 67px;
+				outline: none;
+				border: none;
+				margin-top: -10px;
+			}
+
+			.incorrect{
+				display: none;
+				position: absolute;
+				top: 48px;
+				left: 1px;
+				min-width: 18px;
+				border-bottom: 4px dashed rgba(231, 76, 60, 0.6);
+			}
+
+			#autocomplete{
+			    opacity: 0.4;
+			    pointer-events: none;
+			}
+
+			#enter-text{
+				position: absolute;
+				top: 0;
+			}
+
+			p{
+				width: 100%;
+				font-family: 'Open Sans', sans-serif;
+				font-size: 20px;
+			}
+
+			#suggestions p{
+				display: inline-block;
+			    width: auto;
+			    margin-right: 10px;
+			    cursor: pointer;
+			}
+
+			.center{
+				position: absolute;
+				top: 50%;
+				left: 25%;
+				width: 75%;
+				transform: translate(0, -50%);
+			}
+		</style>
+	</head>
+	<body>
+		<div class="center">
+			<div class="incorrect"></div>
+			<input type="text" id="autocomplete" spellcheck="false">
+			<input type="text" id="enter-text" placeholder="typere here..." spellcheck="false">
+			<div id="suggestions"></div>
+		</div>
+	</body>
+</html>
