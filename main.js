@@ -18,15 +18,6 @@ $.getJSON("./words.json", function(json) {
 });
 
 
-
-let textWidth = function(text){
-	$input = $(`<p class="simulate-input">${text}</p>`);
-	let width = $input.appendTo($('body')).width();
-	$input.remove();
- 	return width;
-};
-
-
 Array.prototype.intersection = function(arr2, sameOrder = true) {
 	let arr1 = this;
 
@@ -66,25 +57,19 @@ String.prototype.matchcase = function (string) {
 let compare = (word, reference) => {
 	let letters = word.split('');
 
-	let hamming = 0;
 	let intersection = 0;
 
 	letters.slice(0, reference.length).forEach((letter, i) => {
-		if (letter !== reference[i])
-			hamming++;
-		else
+		if (letter == reference[i])
 			intersection++;
 	});
-	hamming += Math.abs(word.length - reference.length);
 	
 
 	let union = reference.length + word.length - intersection;
 
 	return {
 		// https://en.wikipedia.org/wiki/Jaccard_index
-		jaccard: (intersection/union),
-		// https://en.wikipedia.org/wiki/Hamming_distance
-		hamming: hamming
+		jaccard: (intersection/union)
 	};
 }
 
@@ -105,7 +90,7 @@ let checkDictionary = (word) => {
 	let results = {};
 	let d = dictionary;
 
-	let searchDomain = [-1,0,1,2,3].reduce((total, current) => {
+	let searchDomain = [-1,0,1,2].reduce((total, current) => {
 		return total.concat(d[word.length + current]);
 	}, []);
 
@@ -113,7 +98,6 @@ let checkDictionary = (word) => {
 		results[reference] = compare(word, reference);
 	});
 	return {
-		hamming: bestMatchByType(results, 'hamming'),
 		jaccard: bestMatchByType(results, 'jaccard', true),
 		inDictionary: searchDomain.indexOf(word) !== -1
 	};
@@ -121,50 +105,46 @@ let checkDictionary = (word) => {
 
 
 
-
-
-
+let textWidth = function(text){
+	$input = $(`<p class="simulate-input">${text}</p>`);
+	let width = $input.appendTo($('body')).width();
+	$input.remove();
+ 	return width;
+};
 
 
 $(document).ready(() => {
 
 	let callbackId;
 
-
-
 	let processText = () => {
 		let $this = $('#enter-text');
-		let caseAccurateValue = $this.val();
-		let value = caseAccurateValue.toLowerCase();
+		let value = $this.val().toLowerCase();
 		$('.incorrect').hide();
 
 
 		if(value.length > 0){
+
+			// reset
 			$('#autocomplete').val('');
 			clearTimeout(callbackId);
+
+			// delay to prevent oversearch
 			callbackId = setTimeout(() => {
+
 				let results = checkDictionary(value);
-				let matches = {
-					hamming: results.hamming.map((str) => {
-						return str.matchcase(caseAccurateValue);
-					}),
-					jaccard: results.jaccard.map((str) => {
-						return str.matchcase(caseAccurateValue);
-					})
-				};
 
 				if(!results.inDictionary)
 					$('.incorrect').width(textWidth(value)).show();
 
-
 				// suggestions
-				let suggestions = matches.jaccard.intersection(matches.hamming).slice(0, 8);
+				let suggestions = results.jaccard;
 				// remove duplicates
 				suggestions = suggestions.filter(function(item, pos) {
-					let isDuplicate = suggestions.indexOf(item) !== pos,
-						isValue = item === caseAccurateValue;
+					let isDup = suggestions.indexOf(item) !== pos,
+						isValue = item === value;
 
-				    return !isDuplicate && !isValue;
+				    return !isDup && !isValue;
 				});
 				// sort based on which array has
 				// a greater intersection
@@ -172,7 +152,12 @@ $(document).ready(() => {
 					let arr = value.split('');
 					return arr.intersection(a).length > arr.intersection(b).length ? -1 : 1;
 				});
+				let maxLength = 9 - Math.round(value.length/3.5);
+				suggestions = suggestions.slice(0, maxLength).sort((a, b) => {
+					return b.length < value.length ? -1 : 0;
+				});
 
+				// display suggestions
 				$('#suggestions').empty();
 				suggestions.forEach((suggestion) => {
 					let $p = $(`<p>${suggestion}</p>`);
@@ -181,7 +166,7 @@ $(document).ready(() => {
 
 				// autocomplete
 				if(suggestions[0].indexOf(value) == 0)
-					$('#autocomplete').val(suggestions[0]);
+					$('#autocomplete').val(suggestions[0].matchcase($this.val()));
 
 				else
 					$('#autocomplete').val('');
@@ -198,21 +183,54 @@ $(document).ready(() => {
 	};
 
 
-
+	let lastValue = '';
 	$('#enter-text')
 	.keydown(function (e) {
-	    if (e.keyCode == 32) return false;
-	    if(e.keyCode == 13){
+		let key = e.keyCode;
+
+	    if(key == 13)
 			$('#enter-text').val($('#autocomplete').val());
-			return false;
-		}
+
+		// control + these
+        // keycodes are banned
+        const isContrl = e.metaKey || e.ctrlKey;
+        let ctrlBan = (isContrl) && [
+            86 // control v
+        ].includes(e.which);
+
+        // new value isn't avable until
+        // keyup event, so instead we simulate
+        // the new value
+        const cursorStart = this.selectionStart;
+        const cursorEnd = this.selectionEnd;
+
+        const escapedKey = [
+            8,  // backspace,
+            46, // delete key,
+            13, // enter
+            9,  // tab
+            37,38,39,40 // arrow keys
+        ].includes(e.which);
+
+        // simulated new value but without cleanse
+        let value = $('#enter-text').val();
+        value = value.slice(0, cursorStart) + e.key + value.slice(cursorEnd);
+
+        // deside if keypress is valid
+        if(ctrlBan || !escapedKey && !/^[a-z]*$/i.test(value))
+        	return false;
 	})
-	.keyup(processText);
+	.keyup(function() {
+		if($(this).val() !== lastValue)
+			processText();
+			lastValue = $(this).val();
+	});
 
 
 	// click to autocomplete
 	$('#suggestions').on('click', 'p', function() {
-		$('#enter-text').val($(this).text());
+		let value = $('#enter-text').val();
+		$('#enter-text').val($(this).text().matchcase(value));
 		processText();
 	});
 });
